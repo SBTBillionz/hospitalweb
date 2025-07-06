@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Patient Dashboard - Zeeland Hospital</title>
+  <style>
+    body { font-family: Arial; max-width: 600px; margin: auto; padding: 20px; }
+    textarea, input, button { width: 100%; padding: 10px; margin: 5px 0; }
+    #messages { border: 1px solid #ccc; padding: 10px; height: 200px; overflow-y: auto; margin-bottom: 10px; }
+  </style>
+</head>
+<body>
+  <h2>Welcome to Your Dashboard</h2>
+  <div id="messages"></div>
+  <form id="messageForm">
+    <input type="text" id="to" placeholder="Doctor Email" required>
+    <textarea id="message" placeholder="Write a message..." required></textarea>
+    <button type="submit">Send</button>
+  </form>
+  <script>
+    const patientId = localStorage.getItem("patientId");
+    if (!patientId) window.location.href = "login.html";
+
+    async function loadMessages() {
+      const res = await fetch(`https://zeeland-hospital-backend.onrender.com=${patientId}`);
+      const data = await res.json();
+      const box = document.getElementById("messages");
+      box.innerHTML = data.map(m => `<div><b>${m.from === patientId ? 'You' : m.from}:</b> ${m.message}</div>`).join('');
+    }
+
+    loadMessages();
+    setInterval(loadMessages, 5000);
+
+    document.getElementById("messageForm").addEventListener("submit", async (e) => {
+      e.preventDefault();
+      const payload = {
+        from: patientId,
+        to: document.getElementById("to").value,
+        message: document.getElementById("message").value
+      };
+      await fetch("https://your-backend-url/api/messages", {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
+      });
+      document.getElementById("message").value = "";
+      loadMessages();
+    });
+  </script>
+</body>
+</html>
